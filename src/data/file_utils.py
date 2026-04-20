@@ -59,6 +59,7 @@ from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input as mnv2_pi
 from tensorflow.keras.applications.vgg19 import VGG19, preprocess_input as vgg_preprocess
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as resnet_preprocess
+from src import config
 
 def log_inverted(tag, img_path, mask_path):
     with open(DBG_LIST, "a") as f:
@@ -153,7 +154,7 @@ def collect_aug_pairs(aug_dir):
                 pairs.append((img, npz, pid))
     return sorted(pairs)
 
-aug_pairs = collect_aug_pairs(AUG_DIR)
+aug_pairs = collect_aug_pairs(config.AUG_DIR)
 if not aug_pairs:
     raise RuntimeError("No (image, *_mask.npz) pairs found in aug_dir. Please check the path and filenames.")
 
