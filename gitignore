@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model weights & checkpoints
+*.keras
+*.h5
+*.hdf5
+*.ckpt
+*.ckpt.*
+checkpoint/
+saved_model/
+
+# Data & images (patient data must never be committed)
+*.npz
+*.npy
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.dcm
+data/
+datasets/
+
+# Google Colab / Drive
+*.colab
+drive/
+
+# Cache
+cache_dir/
+__pycache__/
+.cache/
+*.json.lock
+
+# Logs & debug output
+debug/
+logs/
+*.log
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
