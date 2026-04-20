@@ -141,7 +141,7 @@ def get_base_pid(path):
         return "unknown"
     return m.group(1)
 
-def collect_aug_pairs(aug_dir):
+def collect_aug_pairs():
     pairs = []
     for root, _, files in os.walk(aug_dir):
         pngs = [f for f in files if f.lower().endswith((".png", ".jpg", ".jpeg"))]
@@ -185,7 +185,7 @@ def collect_pairs_by_pid(root_dir: str):
         buckets[pid].sort(key=lambda x: x[0])
     return buckets
 
-pid_buckets = collect_pairs_by_pid(AUG_DIR)
+pid_buckets = collect_pairs_by_pid(config.AUG_DIR)
 assert len(pid_buckets) > 0, "No (image, *_mask.npz) pairs found in the folder"
 
 rng = np.random.RandomState(SEED)
