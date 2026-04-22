@@ -154,8 +154,6 @@ def collect_aug_pairs():
                 pairs.append((img, npz, pid))
     return sorted(pairs)
 
-aug_pairs = []
-
 def collect_pairs_by_pid(root_dir: str):
     """
     return: buckets[pid] = list of (time_key, img_path, mask_path)
@@ -183,18 +181,6 @@ def collect_pairs_by_pid(root_dir: str):
         buckets[pid].sort(key=lambda x: x[0])
     return buckets
 
-pid_buckets = {}
-
-rng = np.random.RandomState(SEED)
-
-all_pids_aug = sorted({pid for _,_,pid in aug_pairs})
-n_val_aug = max(1, int(len(all_pids_aug)*VAL_RATIO))
-val_pids_aug = set(rng.choice(all_pids_aug, size=n_val_aug, replace=False))
-train_pids_aug = [p for p in all_pids_aug if p not in val_pids_aug]
-
-train_pairs = [(i,m,p) for (i,m,p) in aug_pairs if p in train_pids_aug]
-val_pairs   = [(i,m,p) for (i,m,p) in aug_pairs if p in val_pids_aug]
-
 def filter_out_bad_npz(train_pairs, bad_npz_set):
     out = []
     for img_p, npz_p, pid in train_pairs:
@@ -205,11 +191,6 @@ def filter_out_bad_npz(train_pairs, bad_npz_set):
             continue
         out.append((img_p, npz_p, pid))
     return out
-
-all_pids = sorted([p for p in pid_buckets.keys() if len(pid_buckets[p]) >= SEQ_LEN])
-n_val = max(1, int(len(all_pids)*VAL_RATIO))
-val_pids = set(rng.choice(all_pids, size=n_val, replace=False))
-train_pids = [p for p in all_pids if p not in val_pids]
 
 def build_sequences(buckets, pid_list, T=6, S=1):
     seq_imgs, seq_msks = [], []
@@ -226,10 +207,35 @@ def build_sequences(buckets, pid_list, T=6, S=1):
             seq_msks.append(msks)           # list[str] of length T
     return seq_imgs, seq_msks
 
-train_seq_imgs, train_seq_msks = build_sequences(pid_buckets, train_pids, T=SEQ_LEN, S=STRIDE)
-val_seq_imgs,   val_seq_msks   = build_sequences(pid_buckets, val_pids,   T=SEQ_LEN, S=STRIDE)
+aug_pairs = collect_aug_pairs(config.AUG_DIR)
+pid_buckets = collect_pairs_by_pid(config.AUG_DIR)
 
+if not aug_pairs:
+    import warnings
+    warnings.warn("No pairs found in AUG_DIR — running in synthetic/inference mode.")
+    train_pairs = val_pairs = []
+    train_pids = val_pids = []
+    train_seq_imgs = train_seq_msks = []
+    val_seq_imgs = val_seq_msks = []
+else:
+    rng = np.random.RandomState(SEED)
+
+    all_pids_aug = sorted({pid for _,_,pid in aug_pairs})
+    n_val_aug = max(1, int(len(all_pids_aug)*VAL_RATIO))
+    val_pids_aug = set(rng.choice(all_pids_aug, size=n_val_aug, replace=False))
+    train_pids_aug = [p for p in all_pids_aug if p not in val_pids_aug]
+
+    train_pairs = [(i,m,p) for (i,m,p) in aug_pairs if p in train_pids_aug]
+    val_pairs   = [(i,m,p) for (i,m,p) in aug_pairs if p in val_pids_aug]
+
+    all_pids = sorted([p for p in pid_buckets.keys() if len(pid_buckets[p]) >= SEQ_LEN])
+    n_val = max(1, int(len(all_pids)*VAL_RATIO))
+    val_pids = set(rng.choice(all_pids, size=n_val, replace=False))
+    train_pids = [p for p in all_pids if p not in val_pids]
+
+    train_seq_imgs, train_seq_msks = build_sequences(pid_buckets, train_pids, T=SEQ_LEN, S=STRIDE)
+    val_seq_imgs,   val_seq_msks   = build_sequences(pid_buckets, val_pids,   T=SEQ_LEN, S=STRIDE)
+
+    print(f"train seqs: {len(train_seq_imgs)}  val seqs: {len(val_seq_imgs)}")
+    
 print(f"train seqs: {len(train_seq_imgs)}  val seqs: {len(val_seq_imgs)}")
-
-ds_train_paths = tf.data.Dataset.from_tensor_slices((train_seq_imgs, train_seq_msks))
-ds_val_paths   = tf.data.Dataset.from_tensor_slices((val_seq_imgs,   val_seq_msks))
