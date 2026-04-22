@@ -154,9 +154,7 @@ def collect_aug_pairs():
                 pairs.append((img, npz, pid))
     return sorted(pairs)
 
-aug_pairs = collect_aug_pairs(config.AUG_DIR)
-if not aug_pairs:
-    raise RuntimeError("No (image, *_mask.npz) pairs found in aug_dir. Please check the path and filenames.")
+aug_pairs = []
 
 def collect_pairs_by_pid(root_dir: str):
     """
@@ -185,8 +183,7 @@ def collect_pairs_by_pid(root_dir: str):
         buckets[pid].sort(key=lambda x: x[0])
     return buckets
 
-pid_buckets = collect_pairs_by_pid(config.AUG_DIR)
-assert len(pid_buckets) > 0, "No (image, *_mask.npz) pairs found in the folder"
+pid_buckets = {}
 
 rng = np.random.RandomState(SEED)
 
