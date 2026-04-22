@@ -68,6 +68,7 @@ from tensorflow.keras.applications.mobilenet_v2 import preprocess_input as mnv2_
 from tensorflow.keras.applications.vgg19 import VGG19, preprocess_input as vgg_preprocess
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as resnet_preprocess
 
+  
 try:
     import cupy as cp
 except ImportError:
@@ -99,7 +100,15 @@ from src.utils.debug_utils import *
 from src.inference.mask_utils import *
 from src.inference.eval_utils import *
 from src.inference.postprocess import *
+from src.data.file_utils import collect_aug_pairs, collect_pairs_by_pid
+import file_utils as fu
 
+fu.aug_pairs   = collect_aug_pairs(config.AUG_DIR)
+fu.pid_buckets = collect_pairs_by_pid(config.AUG_DIR)
+
+if not fu.aug_pairs:
+    raise RuntimeError("No pairs found. Check AUG_DIR path.")
+    
 # Below: global execution code from the original notebook (unchanged)
 def temp_scale_prob(p, T=0.9):
     p = np.clip(p.astype(np.float32), 1e-6, 1-1e-6)
