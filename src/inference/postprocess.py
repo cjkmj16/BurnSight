@@ -99,58 +99,6 @@ def preprocess_infer_seq(x_1thw3):
     x01 = match_meanstd_seq01(x_1thw3)
     return x01*2.0 - 1.0
 
-avg = diagnose_channel_mapping(mask_model=mask, seg_val_calib=seg_val_calib, num_classes=NUM_CLASSES, max_batches=20)
-
-thr_dict, stats_dict = run_calibration_changefirst_set_once(
-    mask_model=mask,
-    seg_val_calib=seg_val_calib,
-    wound_idx=WOUND_IDX,
-    support_idxs=LESION_IDXS,   # (WOUND, HEALED, ESCHAR) etc.
-    change_idxs=CHANGE_IDXS,    # (WOUND, ESCHAR)
-    preprocess=preprocess_infer_seq,
-    assume_prob="softmax",
-    thr_support_floor=None,     # Optionally pass float(THR_CHANGE) as floor
-)
-THR_WOUND   = thr_dict["wound"]
-THR_SUPPORT = thr_dict["support"]
-THR_CHANGE  = thr_dict["change"]
-
-stats_wound = stats_dict["wound"]
-stats_change = stats_dict["change"]
-stats_sup = stats_dict["support"]
-
-print("stats_wound =", stats_wound)
-print("stats_change =", stats_change)
-print("stats_sup =", stats_sup)
-
-batch_imgs, batch_gts = next(iter(seg_train))
-g = batch_gts.numpy()  # (B,H,W,5)
-
-w_cov = g[..., WOUND_IDX].reshape(g.shape[0], -1).mean(axis=1)  # wound pixel ratio
-print("wound coverage per sample:", np.round(w_cov, 4))
-
-# Viewing per-class coverage together gives a clearer picture
-cov_all = g.reshape(g.shape[0], -1, g.shape[-1]).mean(axis=1)  # (B,C)
-print("class coverage per sample (B,C):\n", np.round(cov_all, 4))
-
-imgs_m11 = batch_imgs.numpy()
-pred     = mask.predict(imgs_m11, verbose=0)
-
-prob_batch = get_wound_prob_batch(pred, wound_idx=WOUND_IDX)   # (B,64,64,1)
-
-gts_np = batch_gts.numpy().astype(np.float32)  # (B,H,W,5)
-
-gt_wound_batch = gts_np[..., WOUND_IDX:WOUND_IDX+1]
-gt_lesion_batch = (gts_np[..., WOUND_IDX] + gts_np[..., HEALED_IDX] + gts_np[..., ESCHAR_IDX])[..., None]
-gt_lesion_batch = (gt_lesion_batch > 0.5).astype(np.float32)  # binary lesion GT (soft sum also acceptable)
-
-prob_all = get_prob_all_batch(pred, assume="auto")
-prob_lesion_batch = np.clip(
-    prob_all[..., WOUND_IDX] + prob_all[..., HEALED_IDX] + prob_all[..., ESCHAR_IDX],
-    0.0, 1.0
-)[..., None]
-
-
 def make_soft_gate(p_soft, mode="raw", thr=None, tau=0.10):
     """
     p_soft: (B,H,W,1) or (H,W,1) or (H,W)
@@ -490,68 +438,6 @@ def build_Xk_with_fixed_msoft(example_sequence01, m_soft, K_VAL, K_MAX):
     Xk = np.concatenate([rgb_m11, k_map, m_soft], axis=-1)
     return Xk.astype(np.float32)
 
-sorted_image_files = get_sorted_day_images(original_test_dir)
-day6_image_path = sorted_image_files[5]
-
-day6_img = cv2.imread(day6_image_path)
-day6_img = cv2.resize(day6_img, (64, 64)) / 255.0
-target_image = tf.convert_to_tensor(day6_img, dtype=tf.float32)
-
-print("target image - min:", tf.reduce_min(target_image).numpy(),
-      "max:", tf.reduce_max(target_image).numpy())
-mean_creator = np.mean(target_image)
-std_creator = np.std(target_image)
-
-print(f"target image - Mean: {mean_creator:.4f}, Std: {std_creator:.4f}")
-
-gray = tf.image.rgb_to_grayscale(target_image)
-contrast = tf.math.reduce_std(gray).numpy()
-print("Contrast:", contrast)
-
-hsv = tf.image.rgb_to_hsv(target_image)
-saturation = tf.reduce_mean(hsv[..., 1]).numpy()
-print("Saturation:", saturation)
-
-# Generate image sequence in DayN order
-example_sequence = []
-for image_path in sorted_image_files:
-    img = cv2.imread(image_path)
-    if img is None:
-        print(f"Failed to load image: {image_path}")
-        continue
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)         # BGR→RGB conversion
-    img = cv2.resize(img, (64, 64)).astype(np.float32) / 255.0
-    example_sequence.append(img)
-
-# Convert to numpy array (automatically shaped as (T,64,64,3))
-example_sequence = np.asarray(example_sequence, dtype=np.float32)
-
-# Add batch dimension → (1,T,64,64,3)
-example_sequence = example_sequence[None, ...]
-print("example_sequence shape:", example_sequence.shape)
-
-T_needed = SEQLEN  # sequence_length used during training
-if example_sequence.shape[1] > T_needed:
-    example_sequence = example_sequence[:, -T_needed:]
-elif example_sequence.shape[1] < T_needed:
-    pad = T_needed - example_sequence.shape[1]
-    pad_frames = np.repeat(example_sequence[:, :1], pad, axis=1)  # Pad by repeating the first frame
-    example_sequence = np.concatenate([pad_frames, example_sequence], axis=1)
-
-print("example_sequence shape:", example_sequence.shape)
-
-m_soft, m_bin, info = make_fixed_msoft_from_seq(
-    example_sequence, mask_model,
-    preprocess=preprocess_infer_seq,
-    THR=THR_WOUND,
-    mode="mixed", tau=0.30, ema_alpha=0.4,
-    temp_T=0.9, use_tta=True,
-    thr_scope="sequence", thr_reduce="median",
-)
-
-Xk_base = build_Xk_with_fixed_msoft(example_sequence, m_soft, K_VAL=1, K_MAX=5)
-print("Xk_base shape:", Xk_base.shape)
-
 def sanity_check_Xk(Xk):
     rgb, kseq, mseq = Xk[..., :3], Xk[..., 3:4], Xk[..., 4:5]
     tf.print("[chk] RGB min/max:", tf.reduce_min(rgb), tf.reduce_max(rgb))
@@ -675,14 +561,6 @@ def calibrate_thr_by_iou(m_soft_pred, bin_last, best_thr,
             best_t   = float(t)
 
     return best_t, best_iou
-
-np.save("cache_m_soft.npy", m_soft)
-np.save("cache_m_bin.npy",  m_bin)
-np.save("cache_m_info.npy", info)
-
-print("✅ m_soft cached.")
-
-m_soft_fixed = np.load("cache_m_soft.npy")
 
 def make_masks_changefirst(prob_all, THR_CHANGE, THR_WOUND=None, healed_margin=0.02):
     p = np.asarray(prob_all, np.float32)
