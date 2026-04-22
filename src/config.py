@@ -76,6 +76,7 @@ debug_dir.mkdir(exist_ok=True)
 
 DBG_LIST = debug_dir / "inverted_list.txt"
 
+MASK_MODEL_PATH = "/content/drive/MyDrive/unet5_best.keras"
 
 def log_inverted(tag, img_path, mask_path):
     with open(DBG_LIST, "a") as f:
