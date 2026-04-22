@@ -59,7 +59,7 @@ from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input as mnv2_pi
 from tensorflow.keras.applications.vgg19 import VGG19, preprocess_input as vgg_preprocess
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as resnet_preprocess
-from src import config
+from src.config import *
 
 def log_inverted(tag, img_path, mask_path):
     with open(DBG_LIST, "a") as f:
