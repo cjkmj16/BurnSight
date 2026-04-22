@@ -141,7 +141,7 @@ def get_base_pid(path):
         return "unknown"
     return m.group(1)
 
-def collect_aug_pairs():
+def collect_aug_pairs(aug_dir=AUG_DIR):
     pairs = []
     for root, _, files in os.walk(aug_dir):
         pngs = [f for f in files if f.lower().endswith((".png", ".jpg", ".jpeg"))]
@@ -207,8 +207,8 @@ def build_sequences(buckets, pid_list, T=6, S=1):
             seq_msks.append(msks)           # list[str] of length T
     return seq_imgs, seq_msks
 
-aug_pairs = collect_aug_pairs(config.AUG_DIR)
-pid_buckets = collect_pairs_by_pid(config.AUG_DIR)
+aug_pairs = collect_aug_pairs(AUG_DIR)
+pid_buckets = collect_pairs_by_pid(AUG_DIR)
 
 if not aug_pairs:
     import warnings
