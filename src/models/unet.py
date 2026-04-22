@@ -277,22 +277,3 @@ def unet(input_shape=(64,64,3), alpha=1.0, weights='imagenet'):
 @tf.keras.saving.register_keras_serializable(package="custom")
 def seg_loss(y_t, y_p):
     return 0.5 * weighted_bce_dynamic(y_t, y_p) + 0.5 * dice_loss(y_t, y_p)
-
-mask = unet(input_shape=(64,64,3), weights='imagenet')
-mask.compile(optimizer=tf.keras.optimizers.Adam(1e-3),
-             loss=seg_loss,
-             metrics=[soft_dice_metric])
-
-ckpt   = ModelCheckpoint('unet5_best.keras', monitor='val_loss', save_best_only=True, mode='min', verbose=1)
-plateau= ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr=1e-5, verbose=1)
-early  = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1)
-
-history = mask.fit(
-    seg_train,
-    validation_data=seg_val,
-    epochs=20,
-    batch_size=8,                     # 2 is too small → recommend 8~32
-    callbacks=[ckpt, plateau, early],
-    verbose=1
-)
-
