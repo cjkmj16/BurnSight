@@ -151,47 +151,6 @@ def build_soft_lesion_anchor(prob_wound,
 
     return np.clip(L, 0, 1).astype(np.float32)
 
-# --- VISUAL SANITY CHECK ONLY (not used in main pipeline) ---
-N = min(5, prob_batch.shape[0])
-for i in range(N):
-    gt_wound    = gt_wound_batch[i, ..., 0]
-    gt_lesion   = gt_lesion_batch[i, ..., 0]
-
-    pw = prob_all[i, ..., WOUND_IDX]
-    ph = prob_all[i, ..., HEALED_IDX]
-    pe = prob_all[i, ..., ESCHAR_IDX]
-    px = prob_all[i, ..., EXCLUDE_IDX]
-
-    p_lesion = np.clip(pw + ph + pe, 0.0, 1.0)
-
-    exp_area_lesion = float(p_lesion.mean())
-    bin_area_wound  = float((pw >= THR_WOUND).mean())
-    print(f"[i={i}] exp_area_lesion={exp_area_lesion:.3f}, bin_area_wound@THR={bin_area_wound:.3f}")
-
-    # For gating/analysis: lesion soft gate (raw without THR dependency is recommended)
-    gate_lesion = make_soft_gate(p_lesion[..., None], mode="raw")  # (H,W,1)
-    overlay_roi = overlay_soft(imgs_m11[i], gate_lesion, alpha_max=0.45)
-
-    # Reporting anchor: wound at global THR
-    overlay_w_anchor, used_thr, used_mask = overlay_mask_on_image(
-        imgs_m11[i], pw[..., None], thr=THR_WOUND, method="otsu", alpha=0.40
-    )
-
-    plt.figure(figsize=(24,4))
-    plt.subplot(1,6,1); plt.imshow(imgs_m11[i]);                 plt.title("Input");           plt.axis("off")
-    plt.subplot(1,6,2); plt.imshow(gt_wound, cmap='gray');     plt.title("GT wound");        plt.axis("off")
-    plt.subplot(1,6,3); plt.imshow(pw, cmap='gray');   plt.title("Prob wound");      plt.axis("off")
-    plt.subplot(1,6,4); plt.imshow(gt_lesion, cmap='gray');    plt.title("GT lesion");       plt.axis("off")
-    plt.subplot(1,6,5); plt.imshow(p_lesion, cmap='gray');  plt.title("Prob lesion");     plt.axis("off")
-    plt.subplot(1,6,6); plt.imshow(overlay_roi);               plt.title("ROI gate (soft lesion)"); plt.axis("off")
-    plt.show()
-
-    # Render anchor overlay as a separate figure if needed
-    plt.figure(figsize=(6,6))
-    plt.imshow(overlay_w_anchor); plt.title(f"Anchor wound THR={THR_WOUND:.2f}"); plt.axis("off")
-    plt.show()
-
-
 def make_fixed_msoft_from_seq(
     example_sequence01, mask_model, preprocess=None,
     THR=0.55,
@@ -446,8 +405,6 @@ def sanity_check_Xk(Xk):
     tf.print("[chk] m cov>0.5 per-t:",
              tf.reduce_mean(tf.cast(mseq>0.5, tf.float32), axis=[0,2,3,4]))
 
-sanity_check_Xk(Xk_base)
-
 def gate_lesion_union_support_amplitude_pred(
     last01, pred01,
     prob_last_lesion, prob_pred_lesion,
@@ -594,11 +551,6 @@ def make_masks_changefirst(prob_all, THR_CHANGE, THR_WOUND=None, healed_margin=0
     m_eschar = m_chg & (~m_wound)
 
     return m_chg, m_wound, m_eschar, m_healed
-
-rgb  = Xk_base[..., :3]
-kseq = Xk_base[..., 3:4]
-mseq = Xk_base[..., 4:5]
-
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
