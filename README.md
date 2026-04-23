@@ -43,9 +43,7 @@ Sequential wound images (T frames)
 
 Click the badge below to open the setup notebook directly in Colab:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/YOUR_REPO/blob/main/BurnSight.ipynb)
-
-> **Note:** Replace `YOUR_USERNAME/YOUR_REPO` with your actual GitHub path after uploading.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cjkmj16/BurnSight/blob/main/BurnSight.ipynb)
 
 ---
 
@@ -213,9 +211,9 @@ pip install cupy-cuda12x tensorflow-probability
 If you use BurnSight in your research, please cite:
 
 ```bibtex
-@misc{burnsight2025,
+@misc{burnsight2026,
   title   = {BurnSight: K-conditioned Wound Healing Trajectory Prediction},
-  year    = {2025},
+  year    = {2026},
   url     = {https://github.com/cjkmj16/BurnSight}
 }
 ```
