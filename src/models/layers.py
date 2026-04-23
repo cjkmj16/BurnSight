@@ -156,6 +156,12 @@ class MSlice(tf.keras.layers.Layer):
     def get_config(self):
         return {}
 
+class FloatCastLayer(tf.keras.layers.Layer):
+    def call(self, x):
+        return tf.cast(x, tf.float32)
+    def get_config(self):
+        return super().get_config()
+        
 class ScaleBias(tf.keras.layers.Layer):
     def build(self, input_shape):
         c = input_shape[-1]
