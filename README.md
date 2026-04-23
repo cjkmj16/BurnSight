@@ -43,7 +43,7 @@ Sequential wound images (T frames)
 
 Click the badge below to open the setup notebook directly in Colab:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/YOUR_REPO/blob/main/BurnSight_Colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/YOUR_REPO/blob/main/BurnSight.ipynb)
 
 > **Note:** Replace `YOUR_USERNAME/YOUR_REPO` with your actual GitHub path after uploading.
 
@@ -124,15 +124,11 @@ The Colab notebook includes a **Step 4-A** cell that auto-generates a small synt
 
 ### Option B — Access to anonymized sample data (small subset)
 A small anonymized sample dataset (≤ 10 patient sequences, IRB-reviewed) is available for research purposes.  
-To request access, please email **[your-email@institution.edu]** with:
+To request access, please email **[pacta300@gmail.com]** with:
 - Your name and affiliation
 - Brief description of intended use
 
 You will receive a time-limited Google Drive link after review (typically within 3 business days).
-
-### Option C — Access to full training data
-The full dataset is available only to collaborating institutions under a formal data sharing agreement.  
-Please contact us at **[your-email@institution.edu]** for details.
 
 ---
 
@@ -180,10 +176,8 @@ Pretrained model weights (`.keras`) are available via Google Drive:
 
 | Model         | Description                          | Link |
 |---------------|--------------------------------------|------|
-| `mask_model`  | Segmentation U-Net (MobileNetV2)     | [Download](#) |
-| `creator`     | K-conditioned wound image synthesizer| [Download](#) |
-
-> Replace `[Download](#)` links with your actual Google Drive sharing URLs.
+| `mask_model`  | Segmentation U-Net (MobileNetV2)     | [coming soon](#) |
+| `creator`     | K-conditioned wound image synthesizer| [coming soon](#) |
 
 Place downloaded `.keras` files in your Drive and update the model load paths in the Colab notebook's **Step 3: Load Models** cell.
 
@@ -222,7 +216,7 @@ If you use BurnSight in your research, please cite:
 @misc{burnsight2025,
   title   = {BurnSight: K-conditioned Wound Healing Trajectory Prediction},
   year    = {2025},
-  url     = {https://github.com/YOUR_USERNAME/YOUR_REPO}
+  url     = {https://github.com/cjkmj16/BurnSight}
 }
 ```
 
